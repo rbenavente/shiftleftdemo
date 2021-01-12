@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "async-scan",
+    "attributes": {
+      "assetName": "Jenkins-demo-build",
+      "assetType": "IaC-API",
+      "tags": {
+        "env": "qa"
+      },
+      "scanAttributes": {
+        "projectName": "jenkins-demo"
+      },
+      "failureCriteria": {
+        "high": 1,
+        "medium": 10,
+        "low": 30,
+        "operator": "or"
+      }
+    }
+  }
+}

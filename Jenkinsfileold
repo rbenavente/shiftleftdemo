@@ -1,0 +1,163 @@
+node {
+    files= ['AWS_S3_VersioningConfiguration.json', 'main.tf', 'sockshop.yaml']
+
+
+    withCredentials([usernamePassword(credentialsId: 'prisma_cloud', passwordVariable: 'PC_PASS', usernameVariable: 'PC_USER')]) {
+    PC_TOKEN = sh(script:"curl -s -k -H 'Content-Type: application/json' -H 'accept: application/json' --data '{\"username\":\"$PC_USER\", \"password\":\"$PC_PASS\"}' https://${AppStack}/login | jq --raw-output .token", returnStdout:true).trim()
+    }
+
+    stage('Clone repository') {
+        checkout scm
+    }
+
+    //$PC_USER,$PC_PASS,$PC_CONSOLE when Galileo is released. 
+    stage('Download latest twistcli') {
+        withCredentials([usernamePassword(credentialsId: 'prisma_cloud', passwordVariable: 'PC_PASS', usernameVariable: 'PC_USER')]) {
+            sh 'curl -k -u $PC_USER:$PC_PASS --output ./twistcli https://$PC_CONSOLE/api/v1/util/twistcli'
+            sh 'sudo chmod a+x ./twistcli'
+        }
+    }
+
+    files.each { item ->
+		stage("Scan IaC file ${item} with twistcli") {
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+
+                withCredentials([usernamePassword(credentialsId: 'prisma_cloud', passwordVariable: 'PC_PASS', usernameVariable: 'PC_USER')]) {
+                    //sh "./twistcli iac scan --u $PC_USER --p $PC_PASS --asset-name "Jenkins IaC" --tags env:jenkins --compliance-threshold high --address https://$PC_CONSOLE --files files/${item}"
+                    sh "./twistcli iac scan --u $PC_USER --p $PC_PASS --compliance-threshold high --address https://$PC_CONSOLE files/${item}"
+                }
+            }
+		}
+    }
+stage("Scan Cloud Formation Template with API v2") {
+
+        def response
+
+
+        response = sh(script:"curl -sq -X POST -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans --data-binary '@scan-asset.json'", returnStdout:true).trim()
+
+        def SCAN_ASSET = readJSON text: response
+
+        def SCAN_ID = SCAN_ASSET['data'].id
+        def SCAN_URL = SCAN_ASSET['data']['links'].url
+
+        //Upload files
+        sh(script:"curl -sq -X PUT  --url '${SCAN_URL}' -T 'files/AWS_S3_VersioningConfiguration.json'", returnStdout:true).trim()
+
+        //start the Scan
+        response = sh(script:"curl -sq -X POST -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID} --data-binary '@scan-start-cft.json'", returnStdout:true).trim()
+
+
+        //Get the Status
+        def SCAN_STATUS
+        def STATUS
+
+        //Need a Do-While loop here.   Haven't found a good syntax with Groovy in Jenkins
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/status", returnStdout:true).trim()
+        SCAN_STATUS = readJSON text: response
+        STATUS = SCAN_STATUS['data']['attributes']['status']
+
+        while  (STATUS == 'processsing'){
+            response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/status", returnStdout:true).trim()
+            SCAN_STATUS = readJSON text: response
+            STATUS = SCAN_STATUS['data']['attributes']['status']
+            print "${STATUS}"
+
+        }
+
+        //Get the Results
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/results", returnStdout:true).trim()
+        def SCAN_RESULTS= readJSON text: response
+
+        print "${SCAN_RESULTS}"
+
+}
+
+	stage("Scan Kubernetes File with API v2") {
+
+        def response
+
+
+        response = sh(script:"curl -sq -X POST -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans --data-binary '@scan-asset.json'", returnStdout:true).trim()
+
+        def SCAN_ASSET = readJSON text: response
+
+        def SCAN_ID = SCAN_ASSET['data'].id
+        def SCAN_URL = SCAN_ASSET['data']['links'].url
+
+        //Upload files
+        sh(script:"curl -sq -X PUT  --url '${SCAN_URL}' -T 'files/sockshop.yaml'", returnStdout:true).trim()
+
+        //start the Scan
+        response = sh(script:"curl -sq -X POST -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID} --data-binary '@scan-start-k8s.json'", returnStdout:true).trim()
+
+
+        //Get the Status
+        def SCAN_STATUS
+        def STATUS
+
+        //Need a Do-While loop here.   Haven't found a good syntax with Groovy in Jenkins
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/status", returnStdout:true).trim()
+        SCAN_STATUS = readJSON text: response
+        STATUS = SCAN_STATUS['data']['attributes']['status']
+
+        while  (STATUS == 'processsing'){
+            response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/status", returnStdout:true).trim()
+            SCAN_STATUS = readJSON text: response
+            STATUS = SCAN_STATUS['data']['attributes']['status']
+            print "${STATUS}"
+
+        }
+
+        //Get the Results
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/results", returnStdout:true).trim()
+        def SCAN_RESULTS= readJSON text: response
+
+        print "${SCAN_RESULTS}"
+    }
+	stage("Scan Terraform file with API v2") {
+
+        def response
+
+
+        response = sh(script:"curl -sq -X POST -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans --data-binary '@scan-asset.json'", returnStdout:true).trim()
+
+        def SCAN_ASSET = readJSON text: response
+
+        def SCAN_ID = SCAN_ASSET['data'].id
+        def SCAN_URL = SCAN_ASSET['data']['links'].url
+
+        //Upload files
+        sh(script:"curl -sq -X PUT  --url '${SCAN_URL}' -T 'files/main.tf'", returnStdout:true).trim()
+
+        //start the Scan
+        response = sh(script:"curl -sq -X POST -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID} --data-binary '@scan-start-tf.json'", returnStdout:true).trim()
+
+
+        //Get the Status
+        def SCAN_STATUS
+        def STATUS
+
+        //Need a Do-While loop here.   Haven't found a good syntax with Groovy in Jenkins
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/status", returnStdout:true).trim()
+        SCAN_STATUS = readJSON text: response
+        STATUS = SCAN_STATUS['data']['attributes']['status']
+
+        while  (STATUS == 'processsing'){
+            response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/status", returnStdout:true).trim()
+            SCAN_STATUS = readJSON text: response
+            STATUS = SCAN_STATUS['data']['attributes']['status']
+            print "${STATUS}"
+
+        }
+
+        //Get the Results
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/results", returnStdout:true).trim()
+        def SCAN_RESULTS= readJSON text: response
+
+        print "${SCAN_RESULTS}"
+
+	}
+
+
+}
