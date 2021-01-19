@@ -1,3 +1,6 @@
+You can clone this repo and put it in the demo-build gogs server, so that can in turn be used in the demo-build Jenkins server with all pre-existing vars and passwors.
+You can also point the demo-build server to this repo, once it becomes public, or to your fork, instead of copying to the gogs server.
+
 
 PC_USER,PC_PASS and PC_CONSOLE are pre populated from the yaml file from the central demo build. 
 
