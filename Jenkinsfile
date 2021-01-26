@@ -43,7 +43,7 @@ node {
                 sh 'curl -k -u $TL_USER:$TL_PASS --output ./twistcli https://$TL_CONSOLE/api/v1/util/twistcli'
                 sh 'sudo chmod a+x ./twistcli'
 		sh 'docker pull rbenavente/evilpetclinic:76'  
-                sh "./twistcli images scan --u $TL_USER --p $TL_PASS --address https://$TL_CONSOLE --details rbenavente/evilpetclinic:76"
+                sh "./twistcli images scan --u $TL_USER --p $TL_PASS --address https://$TL_CONSOLE --details rbenavente/evilpetclinic:latest"
             }
         } catch (err) {
             echo err.getMessage()
@@ -112,7 +112,7 @@ stage("Scan Cloud Formation Template with API v2") {
 //    }
 
     stage('Deploy evilpetclinic') {
-        sh 'kubectl delete --ignore-not-found=true -f files/deploy.yml -n evil'
+//      sh 'kubectl delete --ignore-not-found=true -f files/deploy.yml -n evil'
         sh 'kubectl apply -f files/deploy.yml -n evil'
         sh 'sleep 10'
     }
