@@ -38,3 +38,9 @@ curl -X GET $SVC -d "echo 'hello'"
 
 echo "Testing DoS protection. (Remember to tweak the DoS settings...)"
 for i in {1..51}; do curl $SVC; done
+
+echo "testing Malformed HTTP Request attack"
+curl -X GET $SVC -d "echo 'hello'"
+
+echo "Testing DoS protection. (Remember to tweak the DoS settings...)"
+for i in {1..51}; do curl $SVC; done
