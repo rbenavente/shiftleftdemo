@@ -18,7 +18,7 @@ spec:
         app: evilpetclinic
     spec:
       containers:
-      - image: rbenavente/evilpetclinic:latest ## or harbor-master-test.rbenavente.demo.twistlock.com/library/evilpetclinic:latest  
+      - image: solalraveh/evilpetclinic:latest  ##  rbenavente/evilpetclinic:latest or harbor-master-test.rbenavente.demo.twistlock.com/library/evilpetclinic:latest  
         name: evilpetclinic
         imagePullPolicy: IfNotPresent
         resources: {}
