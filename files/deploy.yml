@@ -25,7 +25,7 @@ spec:
         securityContext:
           privileged: true
         ports:
-        - containerPort: 80
+        - containerPort: 8080
           name: evilpetclinic
           protocol: TCP
       imagePullSecrets:
