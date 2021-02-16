@@ -61,11 +61,12 @@ node {
 	 } finally {
             prismaCloudPublish resultsFilePattern: 'prisma-cloud-scan-results.json'
         }
-        catch (err) {
-            echo err.getMessage()
-            echo "Error detected"
-			throw RuntimeException("Build failed for some specific reason!")
-        }
+     //   catch (err) {
+     //     echo err.getMessage()
+     //       echo "Error detected"
+//			throw RuntimeException("Build failed for some specific reason!")
+  //      }
+    }
    
 
 stage("Scan Cloud Formation Template with API v2") {
