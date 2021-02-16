@@ -66,7 +66,7 @@ node {
             echo "Error detected"
 			throw RuntimeException("Build failed for some specific reason!")
         }
-   }
+   
 
 stage("Scan Cloud Formation Template with API v2") {
 
