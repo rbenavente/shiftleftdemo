@@ -40,7 +40,7 @@ node {
     stage('Scan Image and Publish to Jenkins') {
         try { // do something that fails
             prismaCloudScanImage ca: '', cert: '', dockerAddress: 'unix:///var/run/docker.sock', ignoreImageBuildTime: true, image: 'rbenavente/evilpetclinic:latest', key: '', logLevel: 'debug', podmanPath: '', project: '', resultsFile: 'prisma-cloud-scan-results.json'
-            currentBuild.result = 'SUCCESS'
+           // currentBuild.result = 'SUCCESS'
         } catch (Exception err) {
           currentBuild.result = 'UNSTABLE'
         } finally {
