@@ -3,10 +3,9 @@ node {
 
     withCredentials([usernamePassword(credentialsId: 'prisma_cloud', passwordVariable: 'PC_PASS', usernameVariable: 'PC_USER')]) {
     PC_TOKEN = sh(script:"curl -s -k -H 'Content-Type: application/json' -H 'accept: application/json' --data '{\"username\":\"$PC_USER\", \"password\":\"$PC_PASS\"}' https://${AppStack}/login | jq --raw-output .token", returnStdout:true).trim()
-    withDockerContainer(image: 'bridgecrew/jenkins_bridgecrew_runner:latest')
-    }
-
-    stage('Clone repository') {
+      }
+  
+   stage('Clone repository') {
         checkout scm
     }
 
@@ -112,7 +111,7 @@ stage("Scan Cloud Formation Template with API v2") {
         print "${SCAN_RESULTS}"
 
 }
-
+withDockerContainer(image: 'bridgecrew/jenkins_bridgecrew_runner:latest') {
         stage('Scan IaC wiht Bridgecrew/checkov') {
             steps {		   
                 script {
@@ -121,6 +120,7 @@ stage("Scan Cloud Formation Template with API v2") {
                 }
             }
         }
+	}
  
 //    files.each { item ->
 //        stage("Scan IaC file ${item} with twistcli") {
