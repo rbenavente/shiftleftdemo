@@ -5,6 +5,9 @@ node {
     PC_TOKEN = sh(script:"curl -s -k -H 'Content-Type: application/json' -H 'accept: application/json' --data '{\"username\":\"$PC_USER\", \"password\":\"$PC_PASS\"}' https://${AppStack}/login | jq --raw-output .token", returnStdout:true).trim()
     }
 
+    stage('Clone repository') {
+        checkout scm
+    }
 
     stage('Check image Git dependencies has no vulnerabilities') {
         try {
@@ -113,7 +116,7 @@ agent {
             image 'bridgecrew/jenkins_bridgecrew_runner:latest'
         }
     }
-    stages {
+
         stage('Scan IaC wiht Bridgecrew/checkov') {
             steps {
                 script {
@@ -122,7 +125,7 @@ agent {
                 }
             }
         }
-  }
+ 
 //    files.each { item ->
 //        stage("Scan IaC file ${item} with twistcli") {
 //            try {
