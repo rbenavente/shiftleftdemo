@@ -113,7 +113,7 @@ stage("Scan Cloud Formation Template with API v2") {
  
         stage('Scan IaC wiht Bridgecrew/checkov') {
 	withDockerContainer(image: 'bridgecrew/jenkins_bridgecrew_runner:latest') {              
-                    sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 https://github.com/rbenavente/shiftleftdemo"
+                    sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 files/deploy.yml"
                
             
         }
@@ -141,7 +141,7 @@ stage("Scan Cloud Formation Template with API v2") {
         sh 'sleep 10'
     }
     
-	stage('Run bad Runtime attacks') {
+   stage('Run bad Runtime attacks') {
         sh('chmod +x files/runtime_attacks.sh && ./files/runtime_attacks.sh')
     }
 	
