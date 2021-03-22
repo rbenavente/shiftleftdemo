@@ -111,13 +111,13 @@ stage("Scan Cloud Formation Template with API v2") {
         print "${SCAN_RESULTS}"
 
 }
-agent {
+
+        stage('Scan IaC wiht Bridgecrew/checkov') {
+		agent {
         docker {
             image 'bridgecrew/jenkins_bridgecrew_runner:latest'
         }
     }
-
-        stage('Scan IaC wiht Bridgecrew/checkov') {
             steps {
                 script {
                     sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 https://github.com/rbenavente/shiftleftdemo"
