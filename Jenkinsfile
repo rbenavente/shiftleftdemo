@@ -113,7 +113,7 @@ stage("Scan Cloud Formation Template with API v2") {
  
         stage('Scan IaC wiht Bridgecrew/checkov') {
 	withDockerContainer(image: 'bridgecrew/jenkins_bridgecrew_runner:latest') {              
-                    sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 files/deploy.yml"
+                    sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 https://github.com/se-cloud-emea/shiftleftdemo/"
                
             
         }
