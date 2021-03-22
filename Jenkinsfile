@@ -100,6 +100,15 @@ stage("Scan Cloud Formation Template with API v2") {
             print "${STATUS}"
 
         }
+
+	    
+        //Get the Results
+        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/results", returnStdout:true).trim()
+        def SCAN_RESULTS= readJSON text: response
+
+        print "${SCAN_RESULTS}"
+
+}
 agent {
         docker {
             image 'bridgecrew/jenkins_bridgecrew_runner:latest'
@@ -114,15 +123,7 @@ agent {
                 }
             }
         }
-	    
-        //Get the Results
-        response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/results", returnStdout:true).trim()
-        def SCAN_RESULTS= readJSON text: response
-
-        print "${SCAN_RESULTS}"
-
-}
-	
+	  }
 //    files.each { item ->
 //        stage("Scan IaC file ${item} with twistcli") {
 //            try {
@@ -149,4 +150,4 @@ agent {
         sh('chmod +x files/waas_attacks.sh && ./files/waas_attacks.sh')
     }
 }
-}
+
