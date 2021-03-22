@@ -5,7 +5,12 @@ node {
     PC_TOKEN = sh(script:"curl -s -k -H 'Content-Type: application/json' -H 'accept: application/json' --data '{\"username\":\"$PC_USER\", \"password\":\"$PC_PASS\"}' https://${AppStack}/login | jq --raw-output .token", returnStdout:true).trim()
     }
 
-    stage('Clone repository') {
+agent {
+    docker {
+       image 'bridgecrew/jenkins_bridgecrew_runner:latest'
+        }
+
+	stage('Clone repository') {
         checkout scm
     }
 
