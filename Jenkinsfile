@@ -5,15 +5,6 @@ node {
     PC_TOKEN = sh(script:"curl -s -k -H 'Content-Type: application/json' -H 'accept: application/json' --data '{\"username\":\"$PC_USER\", \"password\":\"$PC_PASS\"}' https://${AppStack}/login | jq --raw-output .token", returnStdout:true).trim()
     }
 
-agent {
-    docker {
-       image 'bridgecrew/jenkins_bridgecrew_runner:latest'
-        }
-
-	stage('Clone repository') {
-        checkout scm
-    }
-
 
     stage('Check image Git dependencies has no vulnerabilities') {
         try {
@@ -109,7 +100,21 @@ stage("Scan Cloud Formation Template with API v2") {
             print "${STATUS}"
 
         }
+agent {
+        docker {
+            image 'bridgecrew/jenkins_bridgecrew_runner:latest'
+        }
+    }
+    stages {
+        stage('Scan IaC wiht Bridgecrew/checkov') {
+            steps {
+                script {
+                    sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 https://github.com/rbenavente/shiftleftdemo"
 
+                }
+            }
+        }
+	    
         //Get the Results
         response = sh(script:"curl -sq -H 'x-redlock-auth: ${PC_TOKEN}' -H 'Content-Type: application/vnd.api+json' --url https://${AppStack}/iac/v2/scans/${SCAN_ID}/results", returnStdout:true).trim()
         def SCAN_RESULTS= readJSON text: response
