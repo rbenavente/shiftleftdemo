@@ -65,8 +65,14 @@ node {
 //			throw RuntimeException("Build failed for some specific reason!")
   //      }
     }
-   
-
+  
+stage('Scan K8s yaml manifest with Bridgecrew/checkov') {
+  withDockerContainer(image: 'bridgecrew/jenkins_bridgecrew_runner:latest') {              
+                  sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 https://github.com/rbenavente/shiftleftdemo"
+               
+            
+        }
+	}
 stage("Scan Cloud Formation Template with API v2") {
 
         def response
@@ -111,13 +117,6 @@ stage("Scan Cloud Formation Template with API v2") {
 
 }
  
-        stage('Scan K8s yaml manifest with Bridgecrew/checkov') {
-	withDockerContainer(image: 'bridgecrew/jenkins_bridgecrew_runner:latest') {              
-                    sh "/run.sh cadc031b-f0a7-5fe1-9085-e0801fc52131 https://github.com/rbenavente/shiftleftdemo"
-               
-            
-        }
-	}
  
 //    files.each { item ->
 //        stage("Scan IaC file ${item} with twistcli") {
