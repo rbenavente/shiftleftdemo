@@ -8,6 +8,7 @@ node {
        checkout scm
     }
 
+// Sacn using Github.sh script for version prior to 21.04 	
 //  stage('Check image Git dependencies has no vulnerabilities') {
 //        try {
 //            withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
@@ -20,14 +21,14 @@ node {
 //        }
 //    }
 
+// Sacn using CI capabilities added on Hamilton 21.04	
   stage('Check image Git dependencies wiht jenkins plugin') {
     try {
-      echo 'before plugin  scanning'
+    
      withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
      prismaCloudScanCode excludedPaths: '', explicitFiles: '', logLevel: 'debug', pythonVersion: '', repositoryName: 'evil.petclinic', repositoryPath: '.', resultsFile: 'prisma-cloud-scan-results.json'
       }         
-     echo 'after  scanning'
-       
+          
      } finally {
        prismaCloudPublish resultsFilePattern: 'prisma-cloud-scan-results.json'
         }
@@ -61,12 +62,14 @@ node {
  //       }
  //       echo "RESULT: ${currentBuild.result}"
 //    }
-
+     // Only for demo purposes scan with both twistcli and plugin
     stage('Scan image with twistcli and Publish to Jenkins') {
       try {
+	     // using pliginh
 	    sh 'docker pull rbenavente/evilpetclinic:latest'  
             withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
            	prismaCloudScanImage ca: '', cert: '', dockerAddress: 'unix:///var/run/docker.sock', ignoreImageBuildTime: true, image: 'rbenavente/evilpetclinic:latest', key: '', logLevel: 'debug', podmanPath: '', project: '', resultsFile: 'prisma-cloud-scan-results.json'
+		 // using twistcli
 		sh 'curl -k -u $TL_USER:$TL_PASS --output ./twistcli https://$TL_CONSOLE/api/v1/util/twistcli'
                 sh 'sudo chmod a+x ./twistcli'
                 sh "./twistcli images scan --u $TL_USER --p $TL_PASS --address https://$TL_CONSOLE --details rbenavente/evilpetclinic:latest"
