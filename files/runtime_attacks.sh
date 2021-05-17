@@ -4,7 +4,7 @@ echo "DL bad evil file"
 kubectl exec $PO -n evil -- bash -c "curl https://cdn.twistlock.com/john/evil -o evil"
 
 echo "DL malware 0-day"
-kubectl exec $PO -n evil -- bash -c "curl https://wildfire.paloaltonetworks.com/publicapi/test/elf -o evil-0-day-WF"
+kubectl exec $PO -n evil -it -- bash -c "curl https://wildfire.paloaltonetworks.com/publicapi/test/elf -o evil-0-day-WF"
 
 
 echo "Kubernetes attack"
