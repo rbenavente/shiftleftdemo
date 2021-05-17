@@ -1,25 +1,40 @@
 node {
     files= ['deploy.yml']
 
-    withCredentials([usernamePassword(credentialsId: 'prisma_cloud', passwordVariable: 'PC_PASS', usernameVariable: 'PC_USER')]) {
+  withCredentials([usernamePassword(credentialsId: 'prisma_cloud', passwordVariable: 'PC_PASS', usernameVariable: 'PC_USER')]) {
     PC_TOKEN = sh(script:"curl -s -k -H 'Content-Type: application/json' -H 'accept: application/json' --data '{\"username\":\"$PC_USER\", \"password\":\"$PC_PASS\"}' https://${AppStack}/login | jq --raw-output .token", returnStdout:true).trim()
       }
    stage('Clone repository') {
-        checkout scm
+       checkout scm
     }
 
-    stage('Check image Git dependencies has no vulnerabilities') {
-        try {
-            withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
-                sh('chmod +x files/checkGit.sh && ./files/checkGit.sh')
-            }
-        } catch (err) {
-            echo err.getMessage()
-            echo "Error detected"
-			throw RuntimeException("Build failed for some specific reason!")
+//  stage('Check image Git dependencies has no vulnerabilities') {
+//        try {
+//            withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
+//                sh('chmod +x files/checkGit.sh && ./files/checkGit.sh')
+//            }
+//        } catch (err) {
+//            echo err.getMessage()
+//            echo "Error detected"
+//			throw RuntimeException("Build failed for some specific reason!")
+//        }
+//    }
+
+  stage('Check image Git dependencies wiht jenkins plugin') {
+    try {
+      echo 'before plugin  scanning'
+     withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
+     prismaCloudScanCode excludedPaths: '', explicitFiles: '', logLevel: 'debug', pythonVersion: '', repositoryName: 'evil.petclinic', repositoryPath: '.', resultsFile: 'prisma-cloud-scan-results.json'
+      }         
+     echo 'after  scanning'
+       
+     } finally {
+       prismaCloudPublish resultsFilePattern: 'prisma-cloud-scan-results.json'
         }
-    }
-
+    
+ }
+	
+	
     //$PC_USER,$PC_PASS,$PC_CONSOLE when Galileo is released. 
     stage('Apply Policy-as-Code for evilpetclinic') {
         withCredentials([usernamePassword(credentialsId: 'twistlock_creds', passwordVariable: 'TL_PASS', usernameVariable: 'TL_USER')]) {
