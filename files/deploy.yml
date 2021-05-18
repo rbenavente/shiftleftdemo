@@ -23,7 +23,7 @@ spec:
         imagePullPolicy: IfNotPresent
         resources: {}
         securityContext:
-          privileged: true
+          privileged: false
         ports:
         - containerPort: 80
           name: evilpetclinic
