@@ -1,7 +1,6 @@
 provider "aws" {
   region = "${var.aws_region}"
 }
-
 resource "aws_security_group" "k8s-security-group" {
   name        = "md-k8s-security-group"
   description = "allow all internal traffic, ssh, http from anywhere."
